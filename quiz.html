@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Learning Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+<style>
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips .tab{flex:0 0 auto;min-width:54px}
+.subj-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.subj{border:1.5px solid var(--border);border-radius:18px;background:#FAFCFF;padding:18px 10px;text-align:center;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;cursor:pointer;color:var(--text)}
+.subj:hover{border-color:var(--primary);background:var(--primary-light)}
+.subj:disabled{opacity:.45;cursor:not-allowed}
+.subj span{display:block;font-size:28px;margin-bottom:4px}
+.q-text{font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;line-height:1.4;margin:6px 0 16px}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--border);border-radius:13px;padding:13px 14px;margin-bottom:10px;background:#FAFCFF;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);cursor:pointer}
+.opt.right{border-color:var(--success);background:var(--success-bg)}
+.opt.wrong{border-color:var(--danger);background:var(--danger-bg)}
+.res-emoji{font-size:54px;text-align:center}
+</style>
+</head>
+<body>
+<div id="hero"></div>
+<div class="wrap overlap" id="main"></div>
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script src="quiz-data.js"></script>
+<script>
+var ROUND_Q = 4, MIN_PER_CORRECT = 2;
+var DICT = {
+  en:{
+    pageTitle:"Learning Quiz", pageSub:"Answer questions to earn a little extra screen time",
+    forAge:function(a){return "Questions matched to age "+a;}, editProfile:"Edit", needAge:"Set your age in your profile first so we can pick questions that fit you.", toProfile:"Open profile",
+    subjTitle:"Choose a subject",
+    subj:{math:"Math", indo:"Indonesian", eng:"English", ipa:"Science"},
+    bonusInfo:function(b,c){return "Bonus today: "+b+" of "+c+" min";},
+    capReached:"You've reached today's bonus limit set by your parent. Come back tomorrow!",
+    capOff:"Your parent hasn't turned on bonus time.",
+    rule:function(n,m){return n+" questions per round. Each correct answer gives +"+m+" min. The minutes you spend playing also count as screen time.";},
+    age:function(a){return a+" yrs";},
+    qOf:function(i,n){return "Question "+i+" of "+n;},
+    next:"Next", finish:"See result",
+    correctN:function(c,t){return c+" of "+t+" correct";},
+    bonusGot:function(b){return b>0?"+"+b+" min added to today's limit":"No bonus added";},
+    capNote:"Today's bonus limit is reached.",
+    timeNote:function(u){return u+" min of play counted as screen time.";},
+    again:"Play again", homeBtn:"Back to home",
+    good:"Great job!", ok:"Nice try, keep going!", answerWas:function(a){return "Correct answer: "+a;}
+  },
+  id:{
+    pageTitle:"Kuis Belajar", pageSub:"Jawab soal untuk dapat tambahan screen time",
+    forAge:function(a){return "Soal disesuaikan untuk usia "+a+" tahun";}, editProfile:"Ubah", needAge:"Isi usiamu di profil dulu supaya soalnya sesuai untukmu.", toProfile:"Buka profil",
+    subjTitle:"Pilih mata pelajaran",
+    subj:{math:"Matematika", indo:"B. Indonesia", eng:"B. Inggris", ipa:"IPA"},
+    bonusInfo:function(b,c){return "Bonus hari ini: "+b+" dari "+c+" menit";},
+    capReached:"Kamu sudah mencapai batas bonus hari ini yang diatur orang tuamu. Lanjut besok ya!",
+    capOff:"Orang tuamu belum mengaktifkan waktu bonus.",
+    rule:function(n,m){return n+" soal per ronde. Tiap jawaban benar memberi +"+m+" menit. Menit saat kamu bermain juga dihitung sebagai screen time.";},
+    age:function(a){return a+" th";},
+    qOf:function(i,n){return "Soal "+i+" dari "+n;},
+    next:"Lanjut", finish:"Lihat hasil",
+    correctN:function(c,t){return c+" dari "+t+" benar";},
+    bonusGot:function(b){return b>0?"+"+b+" menit ditambah ke batas hari ini":"Tidak ada bonus";},
+    capNote:"Batas bonus hari ini sudah tercapai.",
+    timeNote:function(u){return u+" menit bermain dihitung sebagai screen time.";},
+    again:"Main lagi", homeBtn:"Kembali ke beranda",
+    good:"Hebat!", ok:"Ayo coba lagi, kamu pasti bisa!", answerWas:function(a){return "Jawaban benar: "+a;}
+  }
+};
+var S = {view:'setup', subject:null, qs:[], i:0, ok:0, picked:null, t0:0, res:null};
+function userAge(){ return parseInt(NURVA.get('nurva_child_age','0'),10) || 0; }
+function band(a){ return a<=12 ? 'a' : a<=14 ? 'b' : 'c'; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
+function startQuiz(sub){
+  var pool = QUIZ_Q[sub][band(userAge())];
+  S.subject = sub; S.i = 0; S.ok = 0; S.picked = null; S.t0 = Date.now(); S.view = 'play';
+  S.qs = shuffle(pool).slice(0,ROUND_Q).map(function(r){ return {q:r[0], c:r[1], o:shuffle(r.slice(1,5)), e:r[5]}; });
+  render();
+}
+function answer(k){
+  if(S.picked !== null) return;
+  S.picked = k;
+  if(S.qs[S.i].o[k] === S.qs[S.i].c) S.ok++;
+  render();
+}
+function next(){
+  S.i++; S.picked = null;
+  if(S.i >= S.qs.length) finish();
+  render();
+}
+function finish(){
+  var cap = NURVA.bonusCap(), have = NURVA.bonusToday();
+  var bonus = Math.max(0, Math.min(S.ok*MIN_PER_CORRECT, cap-have));
+  localStorage.setItem('nurva_bonus_today', JSON.stringify({date:new Date().toDateString(), mins:have+bonus}));
+  var used = Math.max(1, Math.round((Date.now()-S.t0)/60000));
+  localStorage.setItem('nurva_screen_time_minutes', NURVA.screenMins()+used);
+  var log = NURVA.getJSON('nurva_quiz_log', []);
+  log.push({time:Date.now(), subject:S.subject, correct:S.ok, total:S.qs.length, bonus:bonus, used:used});
+  localStorage.setItem('nurva_quiz_log', JSON.stringify(log.slice(-30)));
+  S.res = {bonus:bonus, used:used, capped: have+bonus>=cap};
+  S.view = 'result';
+}
+function setupHTML(){
+  var a = userAge(), cap = NURVA.bonusCap(), have = NURVA.bonusToday();
+  var blocked = cap<=0 ? 'capOff' : (have>=cap ? 'capReached' : '');
+  var names = NURVA.t('subj'), ic = {math:'🧮',indo:'📖',eng:'🔤',ipa:'🔬'};
+  var subs = Object.keys(ic).map(function(k){
+    return '<button class="subj" '+((!a||blocked)?'disabled ':'')+'onclick="startQuiz(\''+k+'\')"><span>'+ic[k]+'</span>'+names[k]+'</button>';
+  }).join('');
+  var ageCard = a ? '<p class="sub" style="margin:0 2px 14px">'+NURVA.t('forAge',a)+' · <a href="profile.html" style="color:var(--primary)">'+NURVA.t('editProfile')+'</a></p>'
+    : '<div class="card fu"><div class="callout">'+NURVA.t('needAge')+'</div><a href="profile.html" style="text-decoration:none"><button class="btn btn-primary" style="margin-top:12px">'+NURVA.t('toProfile')+'</button></a></div>';
+  return ageCard +
+    '<div class="card fu" style="animation-delay:.06s"><div class="card-title">'+NURVA.t('subjTitle')+'</div><div class="subj-grid">'+subs+'</div>'+
+    '<p class="sub" style="margin:14px 0 0">'+NURVA.t('rule',ROUND_Q,MIN_PER_CORRECT)+'</p>'+
+    (blocked ? '<div class="callout" style="margin-top:12px">'+NURVA.t(blocked)+'</div>' : '<p class="sub" style="margin:8px 0 0"><b>'+NURVA.t('bonusInfo',have,cap)+'</b></p>')+'</div>';
+}
+function playHTML(){
+  var q = S.qs[S.i], last = S.i === S.qs.length-1;
+  var opts = q.o.map(function(o,k){
+    var cls = 'opt';
+    if(S.picked !== null){ if(o===q.c) cls += ' right'; else if(k===S.picked) cls += ' wrong'; }
+    return '<button class="'+cls+'" onclick="answer('+k+')">'+o+'</button>';
+  }).join('');
+  var fb = '';
+  if(S.picked !== null) fb = '<div class="callout" style="margin-bottom:12px">'+(q.o[S.picked] !== q.c ? NURVA.t('answerWas',q.c)+'<br>' : '')+'💡 '+q.e+'</div>';
+  var pct = Math.round((S.i + (S.picked!==null?1:0)) / S.qs.length * 100);
+  return '<div class="card fu"><div class="card-title">'+NURVA.t('subj')[S.subject]+' · '+NURVA.t('qOf',S.i+1,S.qs.length)+'</div>'+
+    '<div class="progress" style="margin:0 0 14px"><span style="width:'+pct+'%"></span></div>'+
+    '<div class="q-text">'+q.q+'</div>'+opts+fb+
+    (S.picked!==null ? '<button class="btn btn-primary" onclick="next()">'+NURVA.t(last?'finish':'next')+'</button>' : '')+'</div>';
+}
+function resultHTML(){
+  var good = S.ok >= Math.ceil(S.qs.length*0.75);
+  return '<div class="card fu"><div class="res-emoji">'+(good?'🎉':'💪')+'</div>'+
+    '<h3 style="text-align:center;font-size:22px;margin:6px 0">'+NURVA.t(good?'good':'ok')+'</h3>'+
+    '<div class="big-number" style="text-align:center;font-size:30px">'+NURVA.t('correctN',S.ok,S.qs.length)+'</div>'+
+    '<p style="text-align:center;font-weight:700;margin:10px 0 4px;color:var(--success-dark)">'+NURVA.t('bonusGot',S.res.bonus)+'</p>'+
+    (S.res.capped ? '<p class="sub" style="text-align:center;margin:0">'+NURVA.t('capNote')+'</p>' : '')+
+    '<p class="sub" style="text-align:center;margin:4px 0 16px">'+NURVA.t('timeNote',S.res.used)+'</p>'+
+    '<button class="btn btn-primary" onclick="S.view=\'setup\';render()">'+NURVA.t('again')+'</button>'+
+    '<a href="child-dashboard.html" style="text-decoration:none"><button class="btn btn-ghost" style="margin-top:10px">'+NURVA.t('homeBtn')+'</button></a></div>';
+}
+function render(){
+  document.getElementById('main').innerHTML = (S.view==='play' ? playHTML() : S.view==='result' ? resultHTML() : setupHTML()) +
+    '<div class="credit"><span>'+NURVA.t('footerNote')+'</span></div>';
+}
+if(!NURVA.isChild()){ location.replace('parent-dashboard.html'); }
+else { NURVA.start(DICT, render, 'home'); }
+</script>
+</body>
+</html>

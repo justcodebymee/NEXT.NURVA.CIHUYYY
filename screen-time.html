@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Screen Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+</head>
+<body>
+<div id="hero"></div>
+
+<div class="wrap overlap">
+  <div class="card fu">
+    <div class="card-title" data-i18n="todayUsage">Today's Usage</div>
+    <div class="big-number" id="usedValue">0m</div>
+    <div class="progress" id="progressBar"><span id="progressFill" style="width:0%"></span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="badge" id="statusBadge"></span>
+      <span class="sub" id="limitText"></span>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.08s">
+    <div class="card-title" data-i18n="last7">Last 7 Days</div>
+    <div class="bars" id="bars"></div>
+    <p class="sub" style="margin:12px 0 0" data-i18n="sampleNote">Earlier days are sample data for this prototype; today is live.</p>
+  </div>
+
+  <div class="card fu" style="animation-delay:.14s">
+    <div class="card-title" data-i18n="limitTitle">Daily Limit</div>
+    <div id="limitParent">
+      <div class="stepper">
+        <button class="step-btn" onclick="changeLimit(-15)">−</button>
+        <div class="step-val" id="limitValue">3h 0m</div>
+        <button class="step-btn" onclick="changeLimit(15)">+</button>
+      </div>
+      <p class="sub" style="margin:12px 0 0;text-align:center" data-i18n="limitHintParent">Set how long your child can use screens each day (30 min – 6 hours).</p>
+    </div>
+    <div id="limitChild" style="display:none;">
+      <div class="step-val" id="limitValueChild" style="text-align:center">3h 0m</div>
+      <p class="sub" style="margin:8px 0 0;text-align:center" data-i18n="limitHintChild">This limit is set by your parent. Talk to them if you think it should change.</p>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.17s" id="bonusCard">
+    <div class="card-title" data-i18n="bonusTitle">Bonus time from quizzes</div>
+    <div class="stepper">
+      <button class="step-btn" onclick="changeCap(-5)">−</button>
+      <div class="step-val" id="capValue">20 min</div>
+      <button class="step-btn" onclick="changeCap(5)">+</button>
+    </div>
+    <p class="sub" style="margin:12px 0 0;text-align:center" data-i18n="bonusHint"></p>
+  </div>
+
+  <div class="card fu" style="animation-delay:.2s" id="demoCard">
+    <div class="card-title" data-i18n="demoTitle">Demo: simulate usage</div>
+    <button class="btn btn-primary" onclick="addUsage(30)" data-i18n="add30">+30 min usage</button>
+    <button class="btn btn-ghost" onclick="resetUsage()" data-i18n="resetUsage">Reset to 2h 8m</button>
+  </div>
+
+  <div class="credit"><span data-i18n="footerNote"></span></div>
+</div>
+
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script>
+var DICT = {
+  en:{
+    pageTitle:"Screen Time", pageSub:"Healthy digital habits, one day at a time",
+    todayUsage:"Today's Usage", last7:"Last 7 Days",
+    sampleNote:"Earlier days are sample data for this prototype; today is live.",
+    limitTitle:"Daily Limit", bonusTitle:"Bonus time from quizzes", bonusHint:"The most extra minutes your child can earn per day by answering quiz questions. Set 0 to turn it off.", unit:"min", bonusWord:"bonus",
+    limitHintParent:"Set how long your child can use screens each day (30 min – 6 hours).",
+    limitHintChild:"This limit is set by your parent. Talk to them if you think it should change.",
+    demoTitle:"Demo: simulate usage", add30:"+30 min usage", resetUsage:"Reset to 2h 8m",
+    ofLimit:function(l){return "of "+l+" daily limit";},
+    stOk:"✅ On track", stWarn:"⚠️ Almost at the limit", stOver:"⛔ Limit exceeded",
+    limitSaved:"Limit updated", usageAdded:"Usage added", usageReset:"Usage reset"
+  },
+  id:{
+    pageTitle:"Screen Time", pageSub:"Kebiasaan digital sehat, satu hari sekali",
+    todayUsage:"Pemakaian Hari Ini", last7:"7 Hari Terakhir",
+    sampleNote:"Hari-hari sebelumnya adalah data contoh untuk prototype ini; hari ini adalah data langsung.",
+    limitTitle:"Batas Harian", bonusTitle:"Waktu bonus dari kuis", bonusHint:"Tambahan menit maksimal per hari yang bisa didapat anak dari menjawab soal kuis. Atur 0 untuk menonaktifkan.", unit:"mnt", bonusWord:"bonus",
+    limitHintParent:"Atur berapa lama anak boleh memakai layar setiap hari (30 menit – 6 jam).",
+    limitHintChild:"Batas ini diatur oleh orang tuamu. Ngobrol dengan mereka kalau kamu merasa perlu diubah.",
+    demoTitle:"Demo: simulasi pemakaian", add30:"+30 menit pemakaian", resetUsage:"Reset ke 2j 8m",
+    ofLimit:function(l){return "dari batas harian "+l;},
+    stOk:"✅ Aman", stWarn:"⚠️ Hampir mencapai batas", stOver:"⛔ Batas terlampaui",
+    limitSaved:"Batas diperbarui", usageAdded:"Pemakaian ditambah", usageReset:"Pemakaian direset"
+  }
+};
+var SAMPLE = [95,140,120,160,110,185]; // 6 previous days
+
+function fmt(m){ var h=Math.floor(m/60), r=m%60; return h>0 ? (NURVA.lang==='id' ? h+'j '+r+'m' : h+'h '+r+'m') : r+'m'; }
+
+function render(){
+  var used = NURVA.screenMins(), limit = NURVA.limitMins();
+  var pct = Math.min(100, Math.round(used/limit*100));
+  document.getElementById('usedValue').textContent = fmt(used);
+  var bar = document.getElementById('progressBar');
+  document.getElementById('progressFill').style.width = pct+'%';
+  var state = used > limit ? 'over' : pct >= 80 ? 'warn' : 'ok';
+  bar.className = 'progress '+state;
+  var badge = document.getElementById('statusBadge');
+  badge.className = 'badge '+state;
+  badge.textContent = NURVA.t(state==='ok'?'stOk':state==='warn'?'stWarn':'stOver');
+  var bt = NURVA.bonusToday();
+  document.getElementById('limitText').textContent = NURVA.t('ofLimit', fmt(limit)) + (bt>0 ? ' (+'+bt+' '+NURVA.t('unit')+' '+NURVA.t('bonusWord')+')' : '');
+
+  document.getElementById('limitValue').textContent = fmt(NURVA.baseLimitMins());
+  document.getElementById('capValue').textContent = NURVA.bonusCap()+' '+NURVA.t('unit');
+  document.getElementById('limitValueChild').textContent = fmt(limit);
+  document.getElementById('limitParent').style.display = NURVA.isChild() ? 'none' : 'block';
+  document.getElementById('limitChild').style.display = NURVA.isChild() ? 'block' : 'none';
+  document.getElementById('demoCard').style.display = NURVA.isChild() ? 'none' : 'block';
+
+  // 7-day bars: previous 6 sample days + today
+  var days = NURVA.t('days'), today = new Date().getDay();
+  var values = SAMPLE.concat([used]), max = Math.max.apply(null, values.concat([limit]));
+  var html = '';
+  for(var i=0;i<7;i++){
+    var dIdx = (today - (6 - i) + 14) % 7;
+    var h = Math.max(4, Math.round(values[i]/max*100));
+    html += '<div class="bar-col"><div class="bar-val">'+fmt(values[i])+'</div><div class="bar'+(i===6?' today':'')+'" style="height:'+h+'px"></div><div class="bar-label">'+days[dIdx]+'</div></div>';
+  }
+  document.getElementById('bars').innerHTML = html;
+}
+function changeLimit(d){
+  var v = Math.min(360, Math.max(30, NURVA.baseLimitMins()+d));
+  localStorage.setItem('nurva_limit_minutes', v);
+  render(); NURVA.toast(NURVA.t('limitSaved'));
+}
+function changeCap(d){
+  var v = Math.min(60, Math.max(0, NURVA.bonusCap()+d));
+  localStorage.setItem('nurva_bonus_cap', v);
+  render(); NURVA.toast(NURVA.t('limitSaved'));
+}
+function addUsage(m){
+  localStorage.setItem('nurva_screen_time_minutes', NURVA.screenMins()+m);
+  render(); NURVA.toast(NURVA.t('usageAdded'));
+}
+function resetUsage(){
+  localStorage.setItem('nurva_screen_time_minutes', 128);
+  render(); NURVA.toast(NURVA.t('usageReset'));
+}
+if(NURVA.isChild()){ location.replace('child-dashboard.html'); }
+else { NURVA.start(DICT, render, 'home'); }
+</script>
+</body>
+</html>

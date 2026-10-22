@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Notifications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+</head>
+<body>
+<div id="hero"></div>
+
+<div class="wrap overlap">
+  <div class="card fu">
+    <div id="notifList"></div>
+  </div>
+  <div class="fu" style="animation-delay:.08s">
+    <button class="btn btn-ghost" onclick="clearAll()" data-i18n="clearBtn">Clear mood notifications</button>
+  </div>
+  <div class="credit"><span data-i18n="footerNote"></span></div>
+</div>
+
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script>
+var DICT = {
+  en:{
+    pageTitle:"Notifications", pageSub:"Updates about mood and screen time",
+    clearBtn:"Clear mood notifications", cleared:"Notifications cleared",
+    empty:"You're all caught up. No notifications yet.",
+    parentMood:function(m){return "Your child feels: "+m;},
+    childMood:function(m){return "You told your parent: "+m;},
+    usageNear:function(u,l){return "Screen time is "+u+" of the "+l+" daily limit.";},
+    usageOver:function(u,l){return "Screen time ("+u+") passed the "+l+" daily limit.";},
+    usageTitle:"Screen time alert", quizParent:function(c,t,b){return "Your child scored "+c+"/"+t+" on a learning quiz and earned +"+b+" min.";}, quizChild:function(c,t,b){return "Quiz: "+c+"/"+t+" correct, +"+b+" min bonus.";},
+    linked:"Account connected", linkedSub:function(n){return n?(n+" is now connected to the parent dashboard."):"Child account is connected.";}
+  },
+  id:{
+    pageTitle:"Notifikasi", pageSub:"Kabar tentang perasaan dan screen time",
+    clearBtn:"Hapus notifikasi perasaan", cleared:"Notifikasi dihapus",
+    empty:"Semua sudah terbaca. Belum ada notifikasi.",
+    parentMood:function(m){return "Anak Anda merasa: "+m;},
+    childMood:function(m){return "Kamu memberi tahu orang tua: "+m;},
+    usageNear:function(u,l){return "Screen time "+u+" dari batas harian "+l+".";},
+    usageOver:function(u,l){return "Screen time ("+u+") melewati batas harian "+l+".";},
+    usageTitle:"Peringatan screen time", quizParent:function(c,t,b){return "Anak Anda mendapat "+c+"/"+t+" benar di kuis belajar dan memperoleh +"+b+" menit.";}, quizChild:function(c,t,b){return "Kuis: "+c+"/"+t+" benar, bonus +"+b+" menit.";},
+    linked:"Akun terhubung", linkedSub:function(n){return n?(n+" sudah terhubung ke dashboard orang tua."):"Akun anak sudah terhubung.";}
+  }
+};
+
+function render(){
+  var items = [];
+  NURVA.getJSON('nurva_mood_history', []).forEach(function(h){
+    var m = NURVA.moods[h.key]; if(!m) return;
+    items.push({ time:h.time, icon:m.emoji, tone:m.tone,
+      title: NURVA.isChild() ? NURVA.t('childMood', m[NURVA.lang]) : NURVA.t('parentMood', m[NURVA.lang]) });
+  });
+
+  NURVA.getJSON('nurva_quiz_log', []).forEach(function(q){
+    items.push({ time:q.time, icon:'🧠', tone:'ok', title:NURVA.t(NURVA.isChild() ? 'quizChild' : 'quizParent', q.correct, q.total, q.bonus) });
+  });
+
+  var used = NURVA.screenMins(), limit = NURVA.limitMins();
+  var f = function(m){ var h=Math.floor(m/60), r=m%60; return h>0 ? (NURVA.lang==='id'?h+'j '+r+'m':h+'h '+r+'m') : r+'m'; };
+  if(NURVA.isChild()){ /* screen time alerts are parent-only */ }
+  else if(used > limit) items.push({ time:Date.now()-60000, icon:'⛔', tone:'warn', title:NURVA.t('usageTitle'), sub:NURVA.t('usageOver', f(used), f(limit)) });
+  else if(used >= limit*0.8) items.push({ time:Date.now()-60000, icon:'⚠️', tone:'warn', title:NURVA.t('usageTitle'), sub:NURVA.t('usageNear', f(used), f(limit)) });
+
+  if(NURVA.get('nurva_child_linked','false') === 'true'){
+    items.push({ time:0, icon:'🔗', tone:'ok', title:NURVA.t('linked'), sub:NURVA.t('linkedSub', NURVA.get('nurva_child_name','')) });
+  }
+
+  items.sort(function(a,b){ return b.time - a.time; });
+  var el = document.getElementById('notifList');
+  if(!items.length){ el.innerHTML = '<div class="empty">'+NURVA.t('empty')+'</div>'; return; }
+  el.innerHTML = items.slice(0,30).map(function(i){
+    return '<div class="row"><div class="row-icon '+i.tone+'">'+i.icon+'</div>' +
+      '<div class="row-main"><div class="row-title">'+i.title+'</div>' + (i.sub ? '<div class="row-sub">'+i.sub+'</div>' : '') + '</div>' +
+      '<div class="row-right">'+(i.time ? NURVA.timeAgo(i.time) : '')+'</div></div>';
+  }).join('');
+}
+function clearAll(){
+  localStorage.removeItem('nurva_mood_history');
+  render(); NURVA.toast(NURVA.t('cleared'));
+}
+NURVA.start(DICT, render, 'home');
+</script>
+</body>
+</html>

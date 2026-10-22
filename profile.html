@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+<style>
+.avatar{background-size:cover;background-position:center;flex-shrink:0}
+.avatar.photo{color:transparent}
+.lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field{width:100%;border:1.5px solid var(--border);border-radius:13px;padding:12px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;margin-bottom:14px;background:#FAFCFF;color:var(--text)}
+.field:focus{outline:none;border-color:var(--primary)}
+.mini{border:1.5px solid var(--border);background:#FAFCFF;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--primary-dark);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin:8px 6px 0 0}
+</style>
+</head>
+<body>
+<div id="hero"></div>
+
+<div class="wrap overlap">
+  <div class="card fu">
+    <div class="profile-head">
+      <div class="avatar" id="avatar">N</div>
+      <div>
+        <h3 id="pName" style="font-size:19px"></h3>
+        <div class="sub" id="pRole"></div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="onPhoto(event)">
+        <button class="mini" onclick="document.getElementById('photoInput').click()" data-i18n="changePhoto">Change photo</button><button class="mini" id="rmPhoto" onclick="removePhoto()" data-i18n="removePhoto">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.04s">
+    <div class="card-title" data-i18n="myDetails">My details</div>
+    <label class="lbl" data-i18n="fullName">Full name</label>
+    <input class="field" id="fFull" type="text" maxlength="60">
+    <label class="lbl" data-i18n="nickname">Nickname</label>
+    <input class="field" id="fNick" type="text" maxlength="20">
+    <div id="childFields">
+      <label class="lbl" data-i18n="ageLbl">Age</label>
+      <select class="field" id="fAge"></select>
+      <label class="lbl" data-i18n="gradeLbl">Class</label>
+      <select class="field" id="fGrade"></select>
+      <label class="lbl" data-i18n="schoolLbl">School (optional)</label>
+      <input class="field" id="fSchool" type="text" maxlength="60">
+    </div>
+    <div id="parentFields">
+      <label class="lbl" data-i18n="relLbl">Relationship to child</label>
+      <select class="field" id="fRel"></select>
+    </div>
+    <button class="btn btn-primary" onclick="save()" data-i18n="saveBtn">Save changes</button>
+  </div>
+
+  <div class="card fu" style="animation-delay:.08s">
+    <div class="card-title" data-i18n="account">Account</div>
+    <div class="kv"><span data-i18n="linkStatus">Connection</span><span id="pLink"></span></div>
+    <div class="kv" id="kvChild"><span data-i18n="childName">Child</span><span id="pChild"></span></div>
+    <div class="kv" id="kvAge"><span data-i18n="ageLbl">Age</span><span id="pAge"></span></div>
+    <div class="kv" id="kvGrade"><span data-i18n="gradeLbl">Class</span><span id="pGrade"></span></div>
+    <div class="kv" id="kvCode"><span data-i18n="pairCode">Pairing code</span><span id="pCode"></span></div>
+    <div class="kv" id="kvLimit"><span data-i18n="limit">Daily limit</span><span id="pLimit"></span></div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.12s">
+    <div class="card-title" data-i18n="language">Language</div>
+    <div class="seg">
+      <button id="segEn" onclick="NURVA.setLang('en')">🇬🇧 English</button>
+      <button id="segId" onclick="NURVA.setLang('id')">🇮🇩 Indonesia</button>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.16s">
+    <a href="#" id="homeLink" style="text-decoration:none"><button class="btn btn-primary" data-i18n="backHome">Back to home</button></a>
+    <button class="btn btn-ghost" onclick="logout()" data-i18n="logout">Logout</button>
+    <p class="sub" style="margin:16px 0 10px" data-i18n="dataNote">Everything is stored only in this browser. Resetting removes pairing, moods and limits.</p>
+    <button class="btn btn-ghost" onclick="resetAll()" data-i18n="resetBtn">Reset all demo data</button>
+  </div>
+
+  <div class="credit">🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br><span data-i18n="footerNote"></span></div>
+</div>
+
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script>
+var DICT = {
+  en:{
+    pageTitle:"Profile", pageSub:"Your account and preferences",
+    changePhoto:"Change photo", removePhoto:"Remove", myDetails:"My details",
+    fullName:"Full name", nickname:"Nickname", ageLbl:"Age", gradeLbl:"Class", schoolLbl:"School (optional)", relLbl:"Relationship to child",
+    saveBtn:"Save changes", saved:"Profile saved", photoSaved:"Photo updated",
+    account:"Account", linkStatus:"Connection", childName:"Child", pairCode:"Pairing code", limit:"Daily limit",
+    language:"Language", backHome:"Back to home", logout:"Logout",
+    dataNote:"Everything is stored only in this browser. Resetting removes pairing, moods, limits and profile data.",
+    resetBtn:"Reset all demo data",
+    roleParent:"Parent", roleChild:"Child", linked:"✅ Connected", notLinked:"⏳ Not connected",
+    parentDefault:"Parent", childDefault:"Child", choose:"Choose…",
+    ageOpt:function(a){return a+" years";},
+    gradeOpt:function(n){return "Grade "+n+" ("+(n<=6?'SD':n<=9?'SMP':'SMA')+")";},
+    rel:{father:"Father",mother:"Mother",guardian:"Guardian"},
+    confirmReset:"Reset all NURVA demo data in this browser?", didReset:"Data reset", confirmLogout:"Log out of NURVA?"
+  },
+  id:{
+    pageTitle:"Profil", pageSub:"Akun dan preferensimu",
+    changePhoto:"Ganti foto", removePhoto:"Hapus", myDetails:"Data diri",
+    fullName:"Nama lengkap", nickname:"Nama panggilan", ageLbl:"Usia", gradeLbl:"Kelas", schoolLbl:"Sekolah (opsional)", relLbl:"Hubungan dengan anak",
+    saveBtn:"Simpan perubahan", saved:"Profil disimpan", photoSaved:"Foto diperbarui",
+    account:"Akun", linkStatus:"Koneksi", childName:"Anak", pairCode:"Kode penghubung", limit:"Batas harian",
+    language:"Bahasa", backHome:"Kembali ke beranda", logout:"Keluar",
+    dataNote:"Semua data hanya tersimpan di browser ini. Reset akan menghapus koneksi, perasaan, batas waktu, dan data profil.",
+    resetBtn:"Reset semua data demo",
+    roleParent:"Orang Tua", roleChild:"Anak", linked:"✅ Terhubung", notLinked:"⏳ Belum terhubung",
+    parentDefault:"Orang Tua", childDefault:"Anak", choose:"Pilih…",
+    ageOpt:function(a){return a+" tahun";},
+    gradeOpt:function(n){return "Kelas "+n+" "+(n<=6?'SD':n<=9?'SMP':'SMA');},
+    rel:{father:"Ayah",mother:"Ibu",guardian:"Wali"},
+    confirmReset:"Reset semua data demo NURVA di browser ini?", didReset:"Data direset", confirmLogout:"Keluar dari NURVA?"
+  }
+};
+var P = NURVA.isChild() ? 'child' : 'parent';
+function key(k){ return 'nurva_'+P+'_'+k; }
+function put(k,v){ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k); }
+function val(id){ return document.getElementById(id).value.trim(); }
+function show(id,on){ document.getElementById(id).style.display = on ? '' : 'none'; }
+
+function fillSelect(id, items){
+  var el = document.getElementById(id), cur = el.value;
+  el.innerHTML = '<option value="">'+NURVA.t('choose')+'</option>' + items.map(function(i){ return '<option value="'+i[0]+'">'+i[1]+'</option>'; }).join('');
+  el.value = cur;
+}
+function buildSelects(){
+  var ages = [], grades = [], r = NURVA.t('rel');
+  for(var a=11;a<=17;a++) ages.push([a, NURVA.t('ageOpt',a)]);
+  for(var g=5;g<=12;g++) grades.push([g, NURVA.t('gradeOpt',g)]);
+  fillSelect('fAge', ages); fillSelect('fGrade', grades);
+  fillSelect('fRel', Object.keys(r).map(function(k){ return [k, r[k]]; }));
+}
+function fillForm(){
+  document.getElementById('fFull').value = NURVA.get(key('fullname'),'');
+  document.getElementById('fNick').value = NURVA.get(key('name'),'');
+  document.getElementById('fAge').value = NURVA.get('nurva_child_age','');
+  document.getElementById('fGrade').value = NURVA.get('nurva_child_grade','');
+  document.getElementById('fSchool').value = NURVA.get('nurva_child_school','');
+  document.getElementById('fRel').value = NURVA.get('nurva_parent_relation','');
+}
+function save(){
+  put(key('fullname'), val('fFull'));
+  put(key('name'), val('fNick'));
+  if(P==='child'){
+    put('nurva_child_age', val('fAge')); put('nurva_child_grade', val('fGrade')); put('nurva_child_school', val('fSchool'));
+  } else put('nurva_parent_relation', val('fRel'));
+  render(); NURVA.toast(NURVA.t('saved'));
+}
+function onPhoto(e){
+  var f = e.target.files[0]; if(!f) return;
+  var fr = new FileReader(), img = new Image();
+  fr.onload = function(){ img.src = fr.result; };
+  img.onload = function(){
+    var s = 200, c = document.createElement('canvas'), m = Math.min(img.width,img.height);
+    c.width = c.height = s;
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);
+    try{ localStorage.setItem(key('photo'), c.toDataURL('image/jpeg',0.8)); }catch(x){}
+    render(); NURVA.toast(NURVA.t('photoSaved'));
+  };
+  fr.readAsDataURL(f); e.target.value = '';
+}
+function removePhoto(){ localStorage.removeItem(key('photo')); render(); }
+
+function render(){
+  var child = NURVA.isChild();
+  buildSelects();
+  var nick = NURVA.get(key('name'),''), full = NURVA.get(key('fullname'),'');
+  var name = nick || full.split(' ')[0] || NURVA.t(child ? 'childDefault' : 'parentDefault');
+  var photo = NURVA.get(key('photo'),'');
+  var av = document.getElementById('avatar');
+  av.textContent = photo ? '' : name.charAt(0).toUpperCase();
+  av.classList.toggle('photo', !!photo);
+  av.style.backgroundImage = photo ? 'url('+photo+')' : '';
+  show('rmPhoto', !!photo);
+  document.getElementById('pName').textContent = full || name;
+  var rel = NURVA.t('rel')[NURVA.get('nurva_parent_relation','')];
+  document.getElementById('pRole').textContent = NURVA.t(child ? 'roleChild' : 'roleParent') + (!child && rel ? ' · '+rel : '');
+  document.getElementById('pLink').textContent = NURVA.t(NURVA.get('nurva_child_linked','false')==='true' ? 'linked' : 'notLinked');
+  var cName = NURVA.get('nurva_child_name',''), age = NURVA.get('nurva_child_age',''), gr = parseInt(NURVA.get('nurva_child_grade',''),10);
+  document.getElementById('pChild').textContent = cName || '-';
+  document.getElementById('pAge').textContent = age ? NURVA.t('ageOpt',age) : '-';
+  document.getElementById('pGrade').textContent = gr ? NURVA.t('gradeOpt',gr) : '-';
+  document.getElementById('pCode').textContent = NURVA.get('nurva_parent_code','-');
+  show('childFields', child); show('parentFields', !child);
+  ['kvChild','kvAge','kvGrade','kvCode','kvLimit'].forEach(function(id){ document.getElementById(id).style.display = child ? 'none' : 'flex'; });
+  document.getElementById('pLimit').textContent = NURVA.fmtMins(NURVA.baseLimitMins());
+  document.getElementById('segEn').classList.toggle('active', NURVA.lang==='en');
+  document.getElementById('segId').classList.toggle('active', NURVA.lang==='id');
+  document.getElementById('homeLink').href = NURVA.home();
+}
+function logout(){
+  if(!confirm(NURVA.t('confirmLogout'))) return;
+  localStorage.removeItem('nurva_role');
+  location.href = 'welcome.html';
+}
+function resetAll(){
+  if(!confirm(NURVA.t('confirmReset'))) return;
+  ['nurva_child_linked','nurva_child_name','nurva_child_mood','nurva_mood_history','nurva_parent_code','nurva_screen_time_minutes','nurva_limit_minutes',
+   'nurva_bonus_cap','nurva_bonus_today','nurva_quiz_log','nurva_child_fullname','nurva_child_photo','nurva_child_age','nurva_child_grade','nurva_child_school',
+   'nurva_parent_name','nurva_parent_fullname','nurva_parent_photo','nurva_parent_relation']
+    .forEach(function(k){ localStorage.removeItem(k); });
+  fillForm(); render(); NURVA.toast(NURVA.t('didReset'));
+}
+NURVA.start(DICT, render, 'profile');
+fillForm();
+</script>
+</body>
+</html>

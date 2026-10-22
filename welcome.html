@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Welcome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF3FF;
+    --surface:#FFFFFF;
+    --primary:#2E6BF2;
+    --primary-dark:#17399E;
+    --primary-light:#E6EFFE;
+    --success:#2FA872;
+    --success-dark:#1F7C54;
+    --success-bg:#E3F6EC;
+    --warning:#F0A93E;
+    --warning-dark:#B0700E;
+    --warning-bg:#FFF2DD;
+    --text:#182338;
+    --muted:#6C7A93;
+    --border:#E2EAF8;
+    --radius-lg:24px;
+    --radius-md:16px;
+    --shadow:0 12px 30px rgba(23,57,158,0.09);
+    --shadow-sm:0 4px 12px rgba(23,57,158,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    position:relative;
+    overflow-x:hidden;
+    min-height:100vh;
+  }
+  h1,h2,h3,h4{font-family:'Baloo 2',sans-serif;margin:0;}
+
+  /* background blobs, same language as dashboards' hero glows */
+  .bg-blobs{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+  .bg-blobs span{position:absolute;border-radius:50%;filter:blur(60px);}
+  .bg-blobs span:nth-child(1){width:280px;height:280px;background:var(--success);opacity:.12;top:-60px;right:-80px;}
+  .bg-blobs span:nth-child(2){width:320px;height:320px;background:var(--warning);opacity:.09;bottom:40px;left:-100px;}
+  .bg-blobs span:nth-child(3){width:220px;height:220px;background:var(--primary);opacity:.10;top:40%;right:-110px;}
+  .bg-blobs span:nth-child(4){width:180px;height:180px;background:var(--primary-dark);opacity:.06;bottom:-60px;right:30%;}
+
+  /* language switcher, shared visual language with the dashboards */
+  .lang-switch{position:fixed;top:18px;right:18px;z-index:30;}
+  .lang-btn{
+    display:flex;align-items:center;gap:5px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font-size:12.5px;font-weight:700;
+    padding:8px 12px;border-radius:999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+    box-shadow:var(--shadow-sm);
+  }
+  .lang-btn:hover{background:var(--primary-light);}
+  .lang-menu{
+    display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);
+    border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);
+    padding:6px;min-width:200px;z-index:31;
+  }
+  .lang-menu.open{display:block;}
+  .lang-option{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 12px;border-radius:11px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;
+  }
+  .lang-option:hover{background:var(--primary-light);}
+  .lang-option.active{background:var(--primary-light);color:var(--primary-dark);}
+  .lang-option.disabled{color:var(--muted);cursor:not-allowed;}
+  .lang-option.disabled:hover{background:none;}
+  .lang-soon{
+    font-size:9.5px;font-weight:700;background:var(--warning-bg);color:var(--warning-dark);
+    padding:2px 7px;border-radius:999px;letter-spacing:.2px;
+  }
+
+  /* ---------- onboarding ---------- */
+  .onboard-wrap{
+    position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:80px 24px 40px;text-align:center;
+  }
+  .onboard-slide{display:none;flex-direction:column;align-items:center;max-width:360px;animation:fadeUp .5s cubic-bezier(.2,.7,.3,1) both;}
+  .onboard-slide.active{display:flex;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  .splash-mark{
+    width:104px;height:104px;border-radius:32px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:44px;
+    box-shadow:0 16px 34px rgba(23,57,158,0.28);
+    animation:floatY 3.2s ease-in-out infinite;
+  }
+  @keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .brand-title{color:var(--primary-dark);font-size:2.1rem;margin-top:18px;}
+  .brand-tagline{color:var(--muted);font-size:13.5px;margin-top:6px;font-weight:500;}
+
+  .onboard-illustration{
+    width:104px;height:104px;border-radius:28px;background:var(--primary-light);
+    display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:22px;
+    box-shadow:var(--shadow);
+  }
+  .onboard-slide h2{font-size:20px;color:var(--text);margin-bottom:10px;}
+  .onboard-slide p{color:var(--muted);font-size:13.5px;line-height:1.65;font-weight:500;margin:0;}
+
+  .onboard-dots{display:flex;gap:7px;margin:30px 0 22px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .25s ease;}
+  .dot.active{width:22px;background:var(--primary);}
+
+  .btn-primary-w{
+    width:100%;max-width:340px;border:none;border-radius:14px;padding:14px;
+    font-weight:700;font-size:14.5px;background:var(--primary);color:#fff;cursor:pointer;
+    font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 10px 22px rgba(46,107,242,0.28);
+  }
+  .btn-primary-w:hover{background:var(--primary-dark);}
+  .skip-link{
+    display:block;margin-top:14px;color:var(--muted);font-size:12.5px;font-weight:600;
+    text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .skip-link:hover{color:var(--primary-dark);}
+
+  /* ---------- role selection ---------- */
+  .role-screen{display:none;position:relative;z-index:1;min-height:100vh;flex-direction:column;
+    align-items:center;justify-content:center;padding:80px 22px 40px;}
+  .role-screen.active{display:flex;}
+  .role-mark{
+    width:64px;height:64px;border-radius:19px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Baloo 2',sans-serif;
+    font-weight:800;font-size:26px;margin-bottom:16px;box-shadow:0 12px 26px rgba(23,57,158,0.26);
+  }
+  .role-title{font-size:21px;margin-bottom:6px;}
+  .role-sub{color:var(--muted);font-size:13px;margin-bottom:26px;font-weight:500;text-align:center;max-width:300px;}
+  .role-cards{width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;}
+  .role-card{
+    display:flex;align-items:center;gap:14px;background:var(--surface);border:1.5px solid var(--border);
+    border-radius:20px;padding:18px;text-decoration:none;color:var(--text);box-shadow:var(--shadow-sm);
+    transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
+  }
+  .role-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:var(--primary);}
+  .role-card .icon{
+    width:50px;height:50px;border-radius:15px;background:var(--primary-light);color:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
+  }
+  .role-card .role-name{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15.5px;}
+  .role-card .role-desc{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500;}
+  .role-back{margin-top:22px;color:var(--muted);font-size:12.5px;font-weight:600;background:none;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+  .role-back:hover{color:var(--primary-dark);}
+
+  .credit-mini{
+    position:relative;z-index:1;text-align:center;font-size:10.5px;color:var(--muted);
+    padding:0 20px 22px;font-weight:500;line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs"><span></span><span></span><span></span><span></span></div>
+
+<div class="lang-switch">
+  <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCode">EN</span></button>
+  <div class="lang-menu" id="langMenu">
+    <div class="lang-option" id="langOptEn" onclick="setLang('en')">🇬🇧 English</div>
+    <div class="lang-option" id="langOptId" onclick="setLang('id')">🇮🇩 Bahasa Indonesia</div>
+    <div class="lang-option disabled">🇪🇸 Español <span class="lang-soon">Soon</span></div>
+    <div class="lang-option disabled">🇫🇷 Français <span class="lang-soon">Soon</span></div>
+    <div class="lang-option disabled">🇨🇳 中文 <span class="lang-soon">Soon</span></div>
+  </div>
+</div>
+
+<!-- ===================== ONBOARDING ===================== -->
+<div class="onboard-wrap" id="onboardWrap">
+
+  <div class="onboard-slide active" data-slide="0">
+    <div class="splash-mark">N</div>
+    <h1 class="brand-title">NURVA</h1>
+    <p class="brand-tagline">Nurturing Digital Resilience for Families</p>
+  </div>
+
+  <div class="onboard-slide" data-slide="1">
+    <div class="onboard-illustration">⏱️</div>
+    <h2 data-i18n="slide1Title">Manage Screen Time</h2>
+    <p data-i18n="slide1Desc">Help your child build healthy digital habits with clear screen time limits.</p>
+  </div>
+
+  <div class="onboard-slide" data-slide="2">
+    <div class="onboard-illustration">💙</div>
+    <h2 data-i18n="slide2Title">Understand Your Child Better</h2>
+    <p data-i18n="slide2Desc">Keep track of your child's emotional wellbeing and digital activity every day, not just their screen time.</p>
+  </div>
+
+  <div class="onboard-slide" data-slide="3">
+    <div class="onboard-illustration">🤝</div>
+    <h2 data-i18n="slide3Title">Stay Connected</h2>
+    <p data-i18n="slide3Desc">Technology doesn't replace parenting — NURVA helps bring your family's communication closer.</p>
+  </div>
+
+  <div class="onboard-dots" id="onboardDots"></div>
+
+  <button class="btn-primary-w" id="onboardNextBtn" onclick="nextSlide()" data-i18n="nextBtn">Next</button>
+  <button class="skip-link" onclick="showRoleScreen()" data-i18n="skipLink">Skip</button>
+</div>
+
+<!-- ===================== ROLE SELECTION ===================== -->
+<div class="role-screen" id="roleScreen">
+  <div class="role-mark">N</div>
+  <div class="role-title" data-i18n="roleTitle">Who's using NURVA?</div>
+  <p class="role-sub" data-i18n="roleSub">Choose your role to continue to the right dashboard.</p>
+  <div class="role-cards">
+    <a class="role-card" href="parent-dashboard.html" onclick="localStorage.setItem('nurva_role','parent')">
+      <div class="icon">👨‍👩‍👧</div>
+      <div>
+        <div class="role-name" data-i18n="parentCardTitle">I'm a Parent</div>
+        <div class="role-desc" data-i18n="parentCardDesc">Monitor and support your child's digital life</div>
+      </div>
+    </a>
+    <a class="role-card" href="child-dashboard.html" onclick="localStorage.setItem('nurva_role','child')">
+      <div class="icon">🧒</div>
+      <div>
+        <div class="role-name" data-i18n="childCardTitle">I'm a Child</div>
+        <div class="role-desc" data-i18n="childCardDesc">Connect to your parent and check in daily</div>
+      </div>
+    </a>
+  </div>
+  <button class="role-back" onclick="backToOnboarding()" data-i18n="backLink">← Back</button>
+</div>
+
+<div class="credit-mini">
+  🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br>
+  <span data-i18n="footerNote">Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.</span>
+</div>
+
+<script>
+/* =================== i18n =====================
+   Same pattern as parent-dashboard.html / child-dashboard.html:
+   English is default, Bahasa Indonesia fully translated,
+   a few more languages listed as "Soon" for future work.
+*/
+const I18N = {
+  en:{
+    slide1Title:"Manage Screen Time",
+    slide1Desc:"Help your child build healthy digital habits with clear screen time limits.",
+    slide2Title:"Understand Your Child Better",
+    slide2Desc:"Keep track of your child's emotional wellbeing and digital activity every day, not just their screen time.",
+    slide3Title:"Stay Connected",
+    slide3Desc:"Technology doesn't replace parenting — NURVA helps bring your family's communication closer.",
+    nextBtn:"Next",
+    getStartedBtn:"Get Started",
+    skipLink:"Skip",
+    roleTitle:"Who's using NURVA?",
+    roleSub:"Choose your role to continue to the right dashboard.",
+    parentCardTitle:"I'm a Parent",
+    parentCardDesc:"Monitor and support your child's digital life",
+    childCardTitle:"I'm a Child",
+    childCardDesc:"Connect to your parent and check in daily",
+    backLink:"← Back",
+    footerNote:"Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space."
+  },
+  id:{
+    slide1Title:"Kelola Screen Time",
+    slide1Desc:"Bantu anak membangun kebiasaan digital yang sehat dengan batas waktu layar yang jelas.",
+    slide2Title:"Pahami Anak Lebih Baik",
+    slide2Desc:"Pantau kondisi emosional dan aktivitas digital anak setiap hari, bukan cuma waktunya.",
+    slide3Title:"Tetap Terhubung",
+    slide3Desc:"Teknologi bukan pengganti peran orang tua — NURVA bantu komunikasi keluarga makin dekat.",
+    nextBtn:"Lanjut",
+    getStartedBtn:"Mulai Sekarang",
+    skipLink:"Lewati",
+    roleTitle:"Siapa yang menggunakan NURVA?",
+    roleSub:"Pilih peranmu untuk lanjut ke dashboard yang sesuai.",
+    parentCardTitle:"Saya Orang Tua",
+    parentCardDesc:"Pantau dan dampingi kehidupan digital anak",
+    childCardTitle:"Saya Anak",
+    childCardDesc:"Hubungkan ke orang tua dan cek perasaan harian",
+    backLink:"← Kembali",
+    footerNote:"Prototype edukasi mengacu PP Nomor 17 Tahun 2025 tentang Perlindungan Anak di Ranah Digital."
+  }
+};
+let currentLang = localStorage.getItem('nurva_lang') || 'en';
+function t(key){
+  const dict = I18N[currentLang] || I18N.en;
+  return dict[key];
+}
+function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.getAttribute('data-i18n');
+    const val=t(key);
+    if(val!==undefined) el.innerHTML=val;
+  });
+  document.getElementById('langCode').textContent = currentLang.toUpperCase();
+  document.getElementById('langOptEn').classList.toggle('active', currentLang==='en');
+  document.getElementById('langOptId').classList.toggle('active', currentLang==='id');
+  document.documentElement.lang = currentLang;
+  updateNextBtnLabel();
+}
+function toggleLangMenu(){
+  document.getElementById('langMenu').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  const wrap=document.querySelector('.lang-switch');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('langMenu').classList.remove('open');
+});
+function setLang(lang){
+  currentLang=lang;
+  localStorage.setItem('nurva_lang',lang);
+  applyTranslations();
+  document.getElementById('langMenu').classList.remove('open');
+}
+
+/* ---------- onboarding slide logic ---------- */
+const slides=[...document.querySelectorAll('.onboard-slide')];
+let current=0;
+function renderDots(){
+  const dotsWrap=document.getElementById('onboardDots');
+  dotsWrap.innerHTML='';
+  slides.forEach((_,i)=>{
+    const d=document.createElement('span');
+    d.className='dot'+(i===current?' active':'');
+    d.onclick=()=>goToSlide(i);
+    dotsWrap.appendChild(d);
+  });
+}
+function updateNextBtnLabel(){
+  const btn=document.getElementById('onboardNextBtn');
+  if(!btn) return;
+  btn.textContent = current===slides.length-1 ? t('getStartedBtn') : t('nextBtn');
+}
+function goToSlide(i){
+  slides[current].classList.remove('active');
+  current=i;
+  slides[current].classList.add('active');
+  renderDots();
+  updateNextBtnLabel();
+}
+function nextSlide(){
+  if(current<slides.length-1){
+    goToSlide(current+1);
+  }else{
+    showRoleScreen();
+  }
+}
+
+/* ---------- role screen ---------- */
+function showRoleScreen(){
+  document.getElementById('onboardWrap').style.display='none';
+  document.getElementById('roleScreen').classList.add('active');
+}
+function backToOnboarding(){
+  document.getElementById('roleScreen').classList.remove('active');
+  document.getElementById('onboardWrap').style.display='flex';
+  goToSlide(0);
+}
+
+/* ---------- init ---------- */
+applyTranslations();
+renderDots();
+</script>
+</body>
+</html>

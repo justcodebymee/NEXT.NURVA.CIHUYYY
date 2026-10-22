@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Activity Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+</head>
+<body>
+<div id="hero"></div>
+
+<div class="wrap overlap">
+  <div class="card fu">
+    <div class="card-title" data-i18n="summary">This Week at a Glance</div>
+    <div id="sumGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;">
+      <div id="avgBox"><div class="big-number" style="font-size:24px" id="sumAvg">-</div><div class="sub" data-i18n="avgDaily">Avg / day</div></div>
+      <div><div class="big-number" style="font-size:24px" id="sumGoal">0%</div><div class="sub" data-i18n="weeklyGoal">Weekly Goal</div></div>
+      <div><div class="big-number" style="font-size:24px" id="sumMood">-</div><div class="sub" data-i18n="latestMood">Latest mood</div></div>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.08s">
+    <div class="card-title" data-i18n="byCategory">Time by Category</div>
+    <div id="cats"></div>
+    <p class="sub" style="margin:14px 0 0" data-i18n="sampleNote">Category data is a sample for this prototype.</p>
+  </div>
+
+  <div class="card fu" style="animation-delay:.11s">
+    <div class="card-title" data-i18n="quizTitle">Learning Quiz</div>
+    <div id="quizList"></div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.14s">
+    <div class="card-title" data-i18n="moodHistory">Mood History</div>
+    <div id="moodList"></div>
+  </div>
+
+  <div class="credit"><span data-i18n="footerNote"></span></div>
+</div>
+
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script>
+var DICT = {
+  en:{
+    pageTitle:"Activity Report", pageSub:"A simple look at your child's digital week",
+    summary:"This Week at a Glance", avgDaily:"Avg / day", weeklyGoal:"Weekly Goal", latestMood:"Latest mood",
+    byCategory:"Time by Category", sampleNote:"Category data is a sample for this prototype.",
+    moodHistory:"Mood History", quizTitle:"Learning Quiz", quizEmpty:"No quizzes played yet.", quizRow:function(c,t,b){return c+"/"+t+" correct · +"+b+" min bonus";}, subj:{math:"Math",indo:"Indonesian",eng:"English",ipa:"Science"},
+    moodEmpty:"No mood check-ins yet. Moods your child shares will show up here.",
+    cats:{learn:"📚 Learning", social:"💬 Social", games:"🎮 Games", video:"🎬 Video"}
+  },
+  id:{
+    pageTitle:"Laporan Aktivitas", pageSub:"Gambaran sederhana minggu digital anak",
+    summary:"Ringkasan Minggu Ini", avgDaily:"Rata-rata / hari", weeklyGoal:"Target Mingguan", latestMood:"Mood terakhir",
+    byCategory:"Waktu per Kategori", sampleNote:"Data kategori adalah contoh untuk prototype ini.",
+    moodHistory:"Riwayat Perasaan", quizTitle:"Kuis Belajar", quizEmpty:"Belum ada kuis yang dimainkan.", quizRow:function(c,t,b){return c+"/"+t+" benar · bonus +"+b+" menit";}, subj:{math:"Matematika",indo:"B. Indonesia",eng:"B. Inggris",ipa:"IPA"},
+    moodEmpty:"Belum ada cek perasaan. Perasaan yang dibagikan anak akan muncul di sini.",
+    cats:{learn:"📚 Belajar", social:"💬 Sosial", games:"🎮 Game", video:"🎬 Video"}
+  }
+};
+var CATS = [['learn',35,'#2E6BF2'],['social',25,'#2FA872'],['games',22,'#F0A93E'],['video',18,'#8A6FE8']];
+
+function render(){
+  var used = NURVA.screenMins();
+  document.getElementById('sumGoal').textContent = NURVA.weeklyGoalPct()+'%';
+  var avg = Math.round(([95,140,120,160,110,185].reduce(function(a,b){return a+b;},0) + used) / 7);
+  document.getElementById('sumAvg').textContent = NURVA.fmtMins(avg);
+  document.getElementById('avgBox').style.display = NURVA.isChild() ? 'none' : 'block';
+  document.getElementById('sumGrid').style.gridTemplateColumns = NURVA.isChild() ? '1fr 1fr' : '1fr 1fr 1fr';
+
+  var hist = NURVA.getJSON('nurva_mood_history', []);
+  var last = hist.length ? hist[hist.length-1] : null;
+  document.getElementById('sumMood').textContent = last && NURVA.moods[last.key] ? NURVA.moods[last.key].emoji : '-';
+
+  var catNames = NURVA.t('cats');
+  document.getElementById('cats').innerHTML = CATS.map(function(c){
+    return '<div class="cat-row"><div class="cat-head"><span>'+catNames[c[0]]+'</span><span>'+c[1]+'%</span></div>' +
+           '<div class="cat-track"><span style="width:'+c[1]+'%;background:'+c[2]+'"></span></div></div>';
+  }).join('');
+
+  var ql = NURVA.getJSON('nurva_quiz_log', []);
+  document.getElementById('quizList').innerHTML = !ql.length ? '<div class="empty">'+NURVA.t('quizEmpty')+'</div>' :
+    ql.slice(-5).reverse().map(function(q){
+      return '<div class="row"><div class="row-icon ok">🧠</div><div class="row-main"><div class="row-title">'+NURVA.t('subj')[q.subject]+'</div><div class="row-sub">'+NURVA.t('quizRow',q.correct,q.total,q.bonus)+'</div></div><div class="row-right">'+NURVA.timeAgo(q.time)+'</div></div>';
+    }).join('');
+
+  var list = document.getElementById('moodList');
+  if(!hist.length){ list.innerHTML = '<div class="empty">'+NURVA.t('moodEmpty')+'</div>'; return; }
+  list.innerHTML = hist.slice(-7).reverse().map(function(h){
+    var m = NURVA.moods[h.key] || NURVA.moods.biasa;
+    return '<div class="row"><div class="row-icon '+m.tone+'">'+m.emoji+'</div>' +
+           '<div class="row-main"><div class="row-title">'+m[NURVA.lang]+'</div></div>' +
+           '<div class="row-right">'+NURVA.timeAgo(h.time)+'</div></div>';
+  }).join('');
+}
+NURVA.start(DICT, render, 'report');
+</script>
+</body>
+</html>

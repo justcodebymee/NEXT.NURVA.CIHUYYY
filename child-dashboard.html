@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Child Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF3FF;
+    --surface:#FFFFFF;
+    --primary:#2E6BF2;
+    --primary-dark:#17399E;
+    --primary-light:#E6EFFE;
+    --success:#2FA872;
+    --success-dark:#1F7C54;
+    --success-bg:#E3F6EC;
+    --warning:#F0A93E;
+    --warning-dark:#B0700E;
+    --warning-bg:#FFF2DD;
+    --neutral-bg:#EEF2F8;
+    --text:#182338;
+    --muted:#6C7A93;
+    --border:#E2EAF8;
+    --radius-lg:24px;
+    --radius-md:16px;
+    --shadow:0 12px 30px rgba(23,57,158,0.09);
+    --shadow-sm:0 4px 12px rgba(23,57,158,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-bottom:96px;
+    position:relative;overflow-x:hidden;
+  }
+  body::before, body::after{content:'';position:fixed;border-radius:50%;filter:blur(60px);pointer-events:none;z-index:0;}
+  body::before{width:260px;height:260px;background:var(--warning);opacity:.10;top:-60px;left:-80px;}
+  body::after{width:300px;height:300px;background:var(--success);opacity:.09;bottom:40px;right:-100px;}
+  h1,h2,h3,h4{font-family:'Baloo 2',sans-serif;margin:0;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px;position:relative;z-index:1;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .fu{animation:fadeUp .55s cubic-bezier(.2,.7,.3,1) both;}
+
+  /* ---------- Gate (not linked yet) ---------- */
+  .gate-screen{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:32px 22px;text-align:center;position:relative;z-index:1;
+  }
+  .gate-mark{
+    width:68px;height:68px;border-radius:20px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;margin-bottom:18px;
+    box-shadow:0 12px 26px rgba(23,57,158,0.28);
+  }
+  .gate-title{font-size:22px;margin-bottom:8px;}
+  .gate-sub{color:var(--muted);font-size:13.5px;line-height:1.65;max-width:320px;margin-bottom:28px;font-weight:500;}
+  .gate-card{
+    width:100%;max-width:340px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;text-align:left;
+  }
+  .gate-lang{
+    display:flex;justify-content:center;margin-bottom:18px;position:relative;
+  }
+  .lang-btn{
+    display:flex;align-items:center;gap:5px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font-size:12.5px;font-weight:700;
+    padding:8px 12px;border-radius:999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+    box-shadow:var(--shadow-sm);
+  }
+  .lang-btn:hover{background:var(--primary-light);}
+  .lang-menu{
+    display:none;position:absolute;top:calc(100% + 8px);background:var(--surface);
+    border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);
+    padding:6px;min-width:200px;z-index:20;
+  }
+  .lang-menu.open{display:block;}
+  .lang-option{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 12px;border-radius:11px;font-size:13px;font-weight:600;color:var(--text);
+    cursor:pointer;
+  }
+  .lang-option:hover{background:var(--primary-light);}
+  .lang-option.active{background:var(--primary-light);color:var(--primary-dark);}
+  .lang-option.disabled{color:var(--muted);cursor:not-allowed;}
+  .lang-option.disabled:hover{background:none;}
+  .lang-soon{
+    font-size:9.5px;font-weight:700;background:var(--warning-bg);color:var(--warning-dark);
+    padding:2px 7px;border-radius:999px;letter-spacing:.2px;
+  }
+  .gate-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;}
+  .gate-field{
+    width:100%;border:1.5px solid var(--border);border-radius:13px;padding:12px 14px;
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;margin-bottom:16px;background:#FAFCFF;color:var(--text);
+  }
+  .gate-field:focus{outline:none;border-color:var(--primary);}
+
+  .otp-row{display:flex;gap:7px;margin-bottom:16px;}
+  .otp-digit{
+    width:100%;aspect-ratio:1/1;text-align:center;font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;
+    border:1.5px solid var(--border);border-radius:12px;background:#FAFCFF;color:var(--primary-dark);
+  }
+  .otp-digit:focus{outline:none;border-color:var(--primary);background:var(--primary-light);}
+
+  .gate-btn{
+    width:100%;border:none;border-radius:13px;padding:14px;font-weight:700;font-size:14.5px;
+    background:var(--primary);color:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .gate-btn:hover{background:var(--primary-dark);}
+  .gate-error{color:#C24545;font-size:12px;margin:-8px 0 12px;min-height:14px;font-weight:600;}
+  .gate-hint{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.7;text-align:center;font-weight:500;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+    border-radius:0 0 34px 34px;padding:20px 18px 58px;position:relative;overflow:hidden;
+    box-shadow:0 14px 30px rgba(23,57,158,0.22);
+  }
+  .hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.09);top:-80px;right:-50px;}
+  .hero::after{content:'';position:absolute;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08);bottom:-60px;left:10px;}
+  .hero-inner{max-width:520px;margin:0 auto;position:relative;z-index:1;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:8px;}
+  .brand{display:flex;align-items:center;gap:9px;}
+  .brand-mark{
+    width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,0.18);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;border:1px solid rgba(255,255,255,0.25);
+  }
+  .brand-name{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:17px;color:#fff;}
+  .topbar-actions{display:flex;align-items:center;gap:8px;}
+  .logout-btn{
+    border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.1);color:#fff;
+    font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;
+  }
+  .topbar .lang-btn{
+    border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.1);color:#fff;box-shadow:none;
+  }
+  .topbar .lang-btn:hover{background:rgba(255,255,255,0.2);}
+  .topbar .lang-menu{right:0;top:calc(100% + 8px);left:auto;}
+  .lang-switch{position:relative;}
+  .hero-greet h1{font-size:26px;color:#fff;}
+  .hero-greet p{margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13.5px;font-weight:500;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+    border:1px solid var(--border);padding:20px;margin-bottom:16px;
+  }
+  .card-title{font-size:13.5px;font-weight:700;color:var(--muted);margin-bottom:10px;}
+  .overlap{margin-top:-40px;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border-radius:18px;border:1px solid var(--border);padding:16px;box-shadow:var(--shadow);}
+  .stat-icon{width:36px;height:36px;border-radius:11px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;}
+  .stat-value{font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;}
+  .stat-label{font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:600;}
+
+  /* Emotion check */
+  #emotion-check .card-title{color:var(--primary-dark);font-size:17px;font-family:'Baloo 2',sans-serif;font-weight:700;}
+  .emotion-sub{font-size:13px;color:var(--muted);margin:-4px 0 18px;font-weight:500;}
+  .mood-picker{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+  .mood-chip{
+    position:relative;border:2px solid var(--border);border-radius:16px;padding:12px 4px;text-align:center;
+    cursor:pointer;background:#FAFCFF;transition:transform .18s cubic-bezier(.3,1.6,.5,1),border-color .15s,background .15s;
+  }
+  .mood-chip .emoji{font-size:25px;display:block;margin-bottom:5px;}
+  .mood-chip .label{font-size:9.5px;font-weight:700;color:var(--muted);}
+  .mood-chip[data-key="senang"].selected,.mood-chip[data-key="baik"].selected{border-color:var(--success);background:var(--success-bg);}
+  .mood-chip[data-key="biasa"].selected{border-color:var(--muted);background:var(--neutral-bg);}
+  .mood-chip[data-key="sedih"].selected,.mood-chip[data-key="marah"].selected{border-color:var(--warning);background:var(--warning-bg);}
+  .mood-chip.selected{transform:scale(1.1) translateY(-2px);}
+  .mood-chip.bounce{animation:bounce .4s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes bounce{0%{transform:scale(1);}45%{transform:scale(1.25) translateY(-4px);}100%{transform:scale(1.1) translateY(-2px);}}
+
+  .mood-sent{
+    display:none;align-items:center;gap:10px;background:var(--success-bg);color:var(--success-dark);
+    border-radius:13px;padding:13px 15px;font-size:13px;font-weight:700;
+  }
+  .mood-sent.show{display:flex;}
+
+  .sparkle-layer{position:relative;height:0;}
+  .sparkle{
+    position:absolute;font-size:14px;pointer-events:none;opacity:0;
+    animation:sparkleUp .8s ease-out forwards;
+  }
+  @keyframes sparkleUp{
+    0%{opacity:1;transform:translate(0,0) scale(.6);}
+    100%{opacity:0;transform:translate(var(--dx),-46px) scale(1.1);}
+  }
+
+  .section-title{font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;margin:24px 2px 12px;}
+  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .menu-tile{
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    padding:16px 14px;text-decoration:none;color:var(--text);box-shadow:var(--shadow-sm);
+    display:flex;align-items:center;gap:11px;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .menu-tile:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+  .menu-icon{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-light);color:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  }
+  .menu-label{font-size:13px;font-weight:700;line-height:1.25;}
+
+  .credit{text-align:center;font-size:11px;color:var(--muted);line-height:1.7;padding:26px 10px 10px;font-weight:500;}
+
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(23,57,158,0.06);
+    display:flex;justify-content:space-around;padding:10px 0 calc(10px + env(safe-area-inset-bottom));z-index:5;
+  }
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font-size:10.5px;font-weight:700;}
+  .nav-item.active{color:var(--primary);}
+  .nav-emoji{font-size:19px;}
+
+  .toast{
+    position:fixed;left:50%;bottom:104px;transform:translate(-50%,20px);
+    background:var(--text);color:#fff;padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;
+    opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.2);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+
+<!-- ===================== GATE: connect to parent account ===================== -->
+<div id="gateScreen" class="gate-screen">
+  <div class="gate-lang">
+    <div class="lang-switch">
+      <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCodeGate">EN</span></button>
+      <div class="lang-menu" id="langMenuGate">
+        <div class="lang-option" id="langOptEnGate" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-option" id="langOptIdGate" onclick="setLang('id')">🇮🇩 Bahasa Indonesia</div>
+        <div class="lang-option disabled">🇪🇸 Español <span class="lang-soon">Soon</span></div>
+        <div class="lang-option disabled">🇫🇷 Français <span class="lang-soon">Soon</span></div>
+        <div class="lang-option disabled">🇨🇳 中文 <span class="lang-soon">Soon</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="gate-mark">N</div>
+  <div class="gate-title" data-i18n="gateTitle">Connect to Parent Account</div>
+  <p class="gate-sub" data-i18n="gateSub">Ask your parent for the pairing code (it's shown on their dashboard), then enter it below.</p>
+  <div class="gate-card">
+    <div class="gate-label" data-i18n="gateNameLabel">Your Name</div>
+    <input class="gate-field" id="gateName" type="text" data-i18n-placeholder="gateNamePlaceholder" placeholder="e.g. Kirana">
+    <div class="gate-label" data-i18n="gateCodeLabel">Pairing Code from Parent</div>
+    <div class="otp-row" id="otpRow">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="0">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="1">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="2">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="3">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="4">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" data-i="5">
+    </div>
+    <div class="gate-error" id="gateError"></div>
+    <button class="gate-btn" onclick="tryLink()" data-i18n="gateConnectBtn">Connect Account</button>
+  </div>
+  <p class="gate-hint" data-i18n="gateHint">Example code: 150321 — this code is generated automatically by NURVA on your parent's dashboard and changes every time they create a new one.</p>
+</div>
+
+<!-- ===================== CHILD DASHBOARD ===================== -->
+<div id="dashboardScreen" style="display:none;">
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">N</div>
+          <div class="brand-name">NURVA</div>
+        </div>
+        <div class="topbar-actions">
+          <div class="lang-switch">
+            <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCode">EN</span></button>
+            <div class="lang-menu" id="langMenu">
+              <div class="lang-option" id="langOptEn" onclick="setLang('en')">🇬🇧 English</div>
+              <div class="lang-option" id="langOptId" onclick="setLang('id')">🇮🇩 Bahasa Indonesia</div>
+              <div class="lang-option disabled">🇪🇸 Español <span class="lang-soon">Soon</span></div>
+              <div class="lang-option disabled">🇫🇷 Français <span class="lang-soon">Soon</span></div>
+              <div class="lang-option disabled">🇨🇳 中文 <span class="lang-soon">Soon</span></div>
+            </div>
+          </div>
+          <button class="logout-btn" onclick="logout()" data-i18n="logout">Logout</button>
+        </div>
+      </div>
+      <div class="hero-greet">
+        <h1 id="greetName">Hi! 👋</h1>
+        <p data-i18n="greetSub">Have a great day!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap overlap">
+    <div class="stat-grid fu" style="animation-delay:.05s">
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value" id="goalVal">0%</div>
+        <div class="stat-label" data-i18n="weeklyGoal">Weekly Goal</div>
+      </div>
+    </div>
+
+    <!-- Emotion Check: child side only -->
+    <div class="card fu" id="emotion-check" style="animation-delay:.12s">
+      <div class="card-title">😊 <span data-i18n="emotionCheck">Emotion Check</span></div>
+      <p class="emotion-sub" data-i18n="emotionSub">How are you feeling right now? Your parent will see a notification.</p>
+      <div class="mood-picker" id="moodPicker">
+        <div class="mood-chip" data-key="senang" onclick="pickMood('senang',this)"><span class="emoji">😄</span><span class="label" data-i18n="moodHappy">Happy</span></div>
+        <div class="mood-chip" data-key="baik" onclick="pickMood('baik',this)"><span class="emoji">🙂</span><span class="label" data-i18n="moodGood">Good</span></div>
+        <div class="mood-chip" data-key="biasa" onclick="pickMood('biasa',this)"><span class="emoji">😐</span><span class="label" data-i18n="moodOkay">Okay</span></div>
+        <div class="mood-chip" data-key="sedih" onclick="pickMood('sedih',this)"><span class="emoji">😔</span><span class="label" data-i18n="moodSad">Sad</span></div>
+        <div class="mood-chip" data-key="marah" onclick="pickMood('marah',this)"><span class="emoji">😡</span><span class="label" data-i18n="moodAngry">Angry</span></div>
+      </div>
+      <div class="sparkle-layer" id="sparkleLayer"></div>
+      <div class="mood-sent" id="moodSent">✅ <span data-i18n="moodSentMsg">Your mood has been sent to your parent!</span></div>
+    </div>
+
+    <div class="section-title fu" style="animation-delay:.18s" data-i18n="mainMenu">Main Menu</div>
+    <div class="menu-grid fu" style="animation-delay:.22s">
+      <a class="menu-tile" href="activity-report.html"><span class="menu-icon">📊</span><span class="menu-label" data-i18n="menuReport">Activity<br>Report</span></a>
+      <a class="menu-tile" href="#emotion-check"><span class="menu-icon">😊</span><span class="menu-label" data-i18n="emotionCheck">Emotion<br>Check</span></a>
+      <a class="menu-tile" href="notifications.html"><span class="menu-icon">🔔</span><span class="menu-label" data-i18n="menuNotif">Notifications</span></a>
+      <a class="menu-tile" href="profile.html"><span class="menu-icon">👤</span><span class="menu-label" data-i18n="menuProfile">Profile</span></a>
+      <a class="menu-tile" href="quiz.html"><span class="menu-icon">🧠</span><span class="menu-label" data-i18n="menuQuiz">Learning<br>Quiz</span></a>
+    </div>
+
+    <div class="credit">
+      🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br>
+      <span data-i18n="footerNote">Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.</span>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <a class="nav-item active" href="child-dashboard.html"><span class="nav-emoji">🏠</span><span data-i18n="navHome">Home</span></a>
+  <a class="nav-item" href="activity-report.html"><span class="nav-emoji">📊</span><span data-i18n="navReport">Report</span></a>
+  <a class="nav-item" href="#emotion-check"><span class="nav-emoji">😊</span><span data-i18n="navMood">Mood</span></a>
+  <a class="nav-item" href="profile.html"><span class="nav-emoji">👤</span><span data-i18n="navProfile">Profile</span></a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =================== i18n =====================
+   English is the default/primary language for this
+   international-competition build. Bahasa Indonesia is
+   fully translated too. A few more languages are listed
+   as "Soon" placeholders in the language menu — adding
+   a real one later just means adding another key here
+   (e.g. "es", "fr") plus its own translation object.
+*/
+const I18N = {
+  en:{
+    logout:"Logout",
+    greetSub:"Have a great day!",
+    hi:(name)=>`Hi, ${name} 👋`,
+    hiPlain:"Hi! 👋",
+    screenTime:"Screen Time",
+    weeklyGoal:"Weekly Goal",
+    emotionCheck:"Emotion<br>Check",
+    emotionSub:"How are you feeling right now? Your parent will see a notification.",
+    moodHappy:"Happy", moodGood:"Good", moodOkay:"Okay", moodSad:"Sad", moodAngry:"Angry",
+    moodSentMsg:"Your mood has been sent to your parent!",
+    mainMenu:"Main Menu",
+    menuScreenTime:"Screen<br>Time",
+    menuReport:"Activity<br>Report",
+    menuNotif:"Notifications",
+    menuProfile:"Profile", menuQuiz:"Learning<br>Quiz",
+    footerNote:"Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.",
+    navHome:"Home", navReport:"Report", navMood:"Mood", navProfile:"Profile",
+    gateTitle:"Connect to Parent Account",
+    gateSub:"Ask your parent for the pairing code (it's shown on their dashboard), then enter it below.",
+    gateNameLabel:"Your Name",
+    gateNamePlaceholder:"e.g. Kirana",
+    gateCodeLabel:"Pairing Code from Parent",
+    gateConnectBtn:"Connect Account",
+    gateHint:"Example code: 150321 — this code is generated automatically by NURVA on your parent's dashboard and changes every time they create a new one.",
+    errNoName:"Please enter your name first.",
+    errNoCode:"Enter the 6-digit code from your parent.",
+    errNoParentCode:"Your parent hasn't generated a code yet. Ask them to open their NURVA dashboard first.",
+    errWrongCode:"Incorrect code. Please check with your parent again.",
+    linkedToast:"Account connected successfully!",
+    moodToast:"Your mood was sent to your parent",
+    loggingOut:"Logging out..."
+  },
+  id:{
+    logout:"Keluar",
+    greetSub:"Semangat beraktivitas hari ini",
+    hi:(name)=>`Hai, ${name} 👋`,
+    hiPlain:"Hai! 👋",
+    screenTime:"Screen Time",
+    weeklyGoal:"Target Mingguan",
+    emotionCheck:"Cek<br>Perasaan",
+    emotionSub:"Bagaimana perasaanmu sekarang? Orang tuamu akan melihat notifikasinya.",
+    moodHappy:"Senang", moodGood:"Baik", moodOkay:"Biasa", moodSad:"Sedih", moodAngry:"Marah",
+    moodSentMsg:"Perasaanmu sudah dikirim ke orang tua!",
+    mainMenu:"Menu Utama",
+    menuScreenTime:"Screen<br>Time",
+    menuReport:"Laporan<br>Aktivitas",
+    menuNotif:"Notifikasi",
+    menuProfile:"Profil", menuQuiz:"Kuis<br>Belajar",
+    footerNote:"Prototype edukasi mengacu PP Nomor 17 Tahun 2025 tentang Perlindungan Anak di Ranah Digital.",
+    navHome:"Beranda", navReport:"Laporan", navMood:"Mood", navProfile:"Profil",
+    gateTitle:"Hubungkan ke Akun Orang Tua",
+    gateSub:"Minta kode penghubung dari orang tuamu (bisa dilihat di dashboard mereka), lalu masukkan di bawah ini.",
+    gateNameLabel:"Nama Kamu",
+    gateNamePlaceholder:"Contoh: Kirana",
+    gateCodeLabel:"Kode Penghubung dari Orang Tua",
+    gateConnectBtn:"Hubungkan Akun",
+    gateHint:"Contoh kode: 150321 — kode ini dibuat otomatis oleh NURVA di dashboard orang tuamu dan berubah setiap kali mereka membuat kode baru.",
+    errNoName:"Masukkan namamu dulu ya.",
+    errNoCode:"Masukkan 6 digit kode dari orang tuamu.",
+    errNoParentCode:"Orang tuamu belum membuat kode. Minta mereka membuka dashboard NURVA dulu.",
+    errWrongCode:"Kode salah. Coba periksa lagi ke orang tuamu.",
+    linkedToast:"Akun berhasil terhubung!",
+    moodToast:"Perasaanmu terkirim ke orang tua",
+    loggingOut:"Logout..."
+  }
+};
+let currentLang = localStorage.getItem('nurva_lang') || 'en';
+function t(key,...args){
+  const dict = I18N[currentLang] || I18N.en;
+  const val = dict[key];
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ---------- OTP digit inputs ---------- */
+(function setupOtp(){
+  const inputs=[...document.querySelectorAll('.otp-digit')];
+  inputs.forEach((inp,idx)=>{
+    inp.addEventListener('input',()=>{
+      inp.value=inp.value.replace(/[^0-9]/g,'');
+      if(inp.value && idx<inputs.length-1) inputs[idx+1].focus();
+    });
+    inp.addEventListener('keydown',(e)=>{
+      if(e.key==='Backspace' && !inp.value && idx>0) inputs[idx-1].focus();
+    });
+    inp.addEventListener('paste',(e)=>{
+      e.preventDefault();
+      const digits=(e.clipboardData.getData('text')||'').replace(/[^0-9]/g,'').split('');
+      digits.forEach((d,i)=>{ if(inputs[i]) inputs[i].value=d; });
+      const next=inputs[Math.min(digits.length,inputs.length-1)];
+      next && next.focus();
+    });
+  });
+})();
+function getOtpValue(){
+  return [...document.querySelectorAll('.otp-digit')].map(i=>i.value).join('');
+}
+
+/* ---------- gate: connect to parent account ---------- */
+function tryLink(){
+  const name=document.getElementById('gateName').value.trim();
+  const code=getOtpValue();
+  const errEl=document.getElementById('gateError');
+  const parentCode=localStorage.getItem('nurva_parent_code');
+
+  if(!name){ errEl.textContent=t('errNoName'); return; }
+  if(code.length<6){ errEl.textContent=t('errNoCode'); return; }
+  if(!parentCode){ errEl.textContent=t('errNoParentCode'); return; }
+  if(code!==parentCode){ errEl.textContent=t('errWrongCode'); return; }
+
+  errEl.textContent='';
+  localStorage.setItem('nurva_child_linked','true');
+  localStorage.setItem('nurva_child_name',name);
+  showDashboard();
+  toast(t('linkedToast'));
+}
+
+function showDashboard(){
+  document.getElementById('gateScreen').style.display='none';
+  document.getElementById('dashboardScreen').style.display='block';
+  document.getElementById('bottomNav').style.display='flex';
+  const name=localStorage.getItem('nurva_child_name')||'';
+  document.getElementById('greetName').textContent = name ? t('hi',name) : t('hiPlain');
+  renderMoodState();
+  document.getElementById('goalVal').textContent = Math.min(100,Math.round((function(){var s=Date.now()-7*864e5,l=[];try{l=JSON.parse(localStorage.getItem('nurva_quiz_log')||'[]');}catch(e){}return l.filter(function(q){return q.time>=s;}).length;})()/5*100))+'%';
+}
+
+/* ---------- emotion check ---------- */
+function renderMoodState(){
+  const raw=localStorage.getItem('nurva_child_mood');
+  if(!raw) return;
+  const data=JSON.parse(raw);
+  document.querySelectorAll('.mood-chip').forEach(c=>{
+    c.classList.toggle('selected', c.dataset.key===data.key);
+  });
+}
+function spawnSparkles(anchorEl){
+  const layer=document.getElementById('sparkleLayer');
+  const rect=anchorEl.getBoundingClientRect();
+  const parentRect=layer.getBoundingClientRect();
+  const icons=['✨','⭐','💫'];
+  for(let i=0;i<6;i++){
+    const s=document.createElement('span');
+    s.className='sparkle';
+    s.textContent=icons[i%icons.length];
+    const left = rect.left - parentRect.left + rect.width/2 + (Math.random()*30-15);
+    s.style.left=left+'px';
+    s.style.top='-10px';
+    s.style.setProperty('--dx',(Math.random()*40-20)+'px');
+    layer.appendChild(s);
+    setTimeout(()=>s.remove(),820);
+  }
+}
+function pickMood(key,el){
+  document.querySelectorAll('.mood-chip').forEach(c=>c.classList.remove('selected','bounce'));
+  el.classList.add('selected','bounce');
+  setTimeout(()=>el.classList.remove('bounce'),400);
+  localStorage.setItem('nurva_child_mood', JSON.stringify({key:key, time:Date.now()}));
+  try{
+    const hist=JSON.parse(localStorage.getItem('nurva_mood_history')||'[]');
+    hist.push({key:key, time:Date.now()});
+    localStorage.setItem('nurva_mood_history', JSON.stringify(hist.slice(-50)));
+  }catch(e){}
+  document.getElementById('moodSent').classList.add('show');
+  spawnSparkles(el);
+  toast(t('moodToast'));
+}
+
+function logout(){ toast(t('loggingOut')); localStorage.removeItem('nurva_role'); setTimeout(function(){ location.href='welcome.html'; },600); }
+
+/* ---------- language switching ---------- */
+function toggleLangMenu(){
+  document.getElementById('langMenu')?.classList.toggle('open');
+  document.getElementById('langMenuGate')?.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  document.querySelectorAll('.lang-switch').forEach(wrap=>{
+    if(!wrap.contains(e.target)){
+      wrap.querySelector('.lang-menu')?.classList.remove('open');
+    }
+  });
+});
+function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.getAttribute('data-i18n');
+    const val=t(key);
+    if(val!==undefined) el.innerHTML=val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key=el.getAttribute('data-i18n-placeholder');
+    const val=t(key);
+    if(val!==undefined) el.setAttribute('placeholder',val);
+  });
+  ['langCode','langCodeGate'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=currentLang.toUpperCase();
+  });
+  document.getElementById('langOptEn')?.classList.toggle('active', currentLang==='en');
+  document.getElementById('langOptId')?.classList.toggle('active', currentLang==='id');
+  document.getElementById('langOptEnGate')?.classList.toggle('active', currentLang==='en');
+  document.getElementById('langOptIdGate')?.classList.toggle('active', currentLang==='id');
+  document.documentElement.lang = currentLang;
+
+  const linked = localStorage.getItem('nurva_child_linked')==='true';
+  if(linked){
+    const name=localStorage.getItem('nurva_child_name')||'';
+    document.getElementById('greetName').textContent = name ? t('hi',name) : t('hiPlain');
+  }
+}
+function setLang(lang){
+  currentLang=lang;
+  localStorage.setItem('nurva_lang',lang);
+  applyTranslations();
+  document.getElementById('langMenu')?.classList.remove('open');
+  document.getElementById('langMenuGate')?.classList.remove('open');
+}
+
+/* ---------- init ---------- */
+(function init(){
+  localStorage.setItem('nurva_role','child');
+  applyTranslations();
+  const linked = localStorage.getItem('nurva_child_linked')==='true';
+  if(linked){ showDashboard(); }
+  else {
+    document.getElementById('gateScreen').style.display='flex';
+    setTimeout(()=>document.querySelector('.otp-digit').focus(),300);
+  }
+})();
+</script>
+</body>
+</html>

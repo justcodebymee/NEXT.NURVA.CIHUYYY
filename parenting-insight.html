@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Parenting Tips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+</head>
+<body>
+<div id="hero"></div>
+
+<div class="wrap overlap">
+  <div class="card fu" id="moodTipCard" style="display:none">
+    <div class="card-title" data-i18n="forNow">For right now</div>
+    <div class="callout" id="moodTip"></div>
+  </div>
+
+  <div class="tabs fu" id="tabs" style="animation-delay:.06s"></div>
+
+  <div class="card fu" style="animation-delay:.1s">
+    <div class="card-title" id="groupTitle"></div>
+    <div id="tipList"></div>
+  </div>
+
+  <div class="credit"><span data-i18n="footerNote"></span></div>
+</div>
+
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script>
+var GROUPS = ['6-9','10-12','13-15','16-18'];
+var DICT = {
+  en:{
+    pageTitle:"Parenting Tips", pageSub:"Practical ideas for guiding your child online",
+    forNow:"For right now",
+    moodTips:{
+      senang:"Your child is feeling happy. It's a good moment to ask what made their day good.",
+      baik:"Your child is doing well. A short, relaxed chat about their day keeps the connection strong.",
+      biasa:"Your child feels neutral. Try an open question like \"What was the most interesting thing today?\"",
+      sedih:"Your child shared feeling sad. Listen first, without fixing or judging, and offer time together offline.",
+      marah:"Your child shared feeling angry or upset. Give space to calm down, then ask gently what happened."
+    },
+    groupTitle:function(g){return "Ages "+g;},
+    groups:{
+      '6-9':[
+        {t:"Co-use devices", d:"Sit together while they play or watch. Ask about what they see and make it a shared activity."},
+        {t:"Keep rules simple and visible", d:"Two or three clear rules (for example: no screens at meals or in bed) work better than a long list."},
+        {t:"Choose age-appropriate content", d:"Pick apps and videos together from a short approved list instead of open browsing."}
+      ],
+      '10-12':[
+        {t:"Explain the why behind limits", d:"Children this age respond to reasons about sleep, focus and safety more than to orders."},
+        {t:"Talk about strangers online", d:"Agree that they tell you if someone they don't know asks for photos, personal details or secrecy."},
+        {t:"Protect sleep", d:"Charge devices outside the bedroom overnight to protect rest and mood."}
+      ],
+      '13-15':[
+        {t:"Negotiate boundaries together", d:"Involve them in setting limits. Teens follow rules they helped build."},
+        {t:"Discuss privacy and digital footprint", d:"Talk about what is safe to post and how posts can last far longer than intended."},
+        {t:"Watch mood, not just minutes", d:"Sudden withdrawal, irritability or sleep changes can matter more than total screen time."}
+      ],
+      '16-18':[
+        {t:"Shift from control to coaching", d:"Offer guidance and trust. Stay available instead of checking everything."},
+        {t:"Talk about pressure and comparison", d:"Social media can fuel stress about looks and popularity. Make it normal to talk about it."},
+        {t:"Model healthy habits", d:"Put your own phone away at dinner. Teens copy what adults do more than what they say."}
+      ]
+    }
+  },
+  id:{
+    pageTitle:"Tips Parenting", pageSub:"Ide praktis mendampingi anak di dunia digital",
+    forNow:"Untuk saat ini",
+    moodTips:{
+      senang:"Anak Anda sedang senang. Saat yang pas untuk bertanya apa yang membuat harinya menyenangkan.",
+      baik:"Anak Anda baik-baik saja. Obrolan singkat yang santai tentang harinya menjaga kedekatan.",
+      biasa:"Anak Anda merasa biasa saja. Coba pertanyaan terbuka seperti \"Apa hal paling menarik hari ini?\"",
+      sedih:"Anak Anda berbagi bahwa ia sedih. Dengarkan dulu tanpa menghakimi atau buru-buru memperbaiki, dan tawarkan waktu bersama tanpa gawai.",
+      marah:"Anak Anda berbagi bahwa ia marah atau kesal. Beri ruang untuk tenang, lalu tanyakan dengan lembut apa yang terjadi."
+    },
+    groupTitle:function(g){return "Usia "+g+" tahun";},
+    groups:{
+      '6-9':[
+        {t:"Dampingi saat memakai perangkat", d:"Duduk bersama saat anak bermain atau menonton. Tanyakan apa yang dilihatnya dan jadikan kegiatan bersama."},
+        {t:"Aturan sederhana dan terlihat", d:"Dua atau tiga aturan jelas (misalnya: tanpa layar saat makan dan di tempat tidur) lebih efektif daripada daftar panjang."},
+        {t:"Pilih konten sesuai usia", d:"Pilih aplikasi dan video bersama dari daftar singkat yang disetujui, bukan menjelajah bebas."}
+      ],
+      '10-12':[
+        {t:"Jelaskan alasan di balik batasan", d:"Anak usia ini lebih menerima alasan tentang tidur, fokus, dan keamanan daripada perintah."},
+        {t:"Bicarakan soal orang asing di internet", d:"Sepakati bahwa anak memberi tahu Anda jika ada orang tak dikenal meminta foto, data pribadi, atau meminta dirahasiakan."},
+        {t:"Lindungi waktu tidur", d:"Cas perangkat di luar kamar saat malam untuk menjaga istirahat dan suasana hati."}
+      ],
+      '13-15':[
+        {t:"Tentukan batasan bersama", d:"Libatkan remaja menentukan batas. Mereka lebih patuh pada aturan yang ikut mereka susun."},
+        {t:"Diskusikan privasi dan jejak digital", d:"Bahas apa yang aman diunggah dan bagaimana unggahan bisa bertahan jauh lebih lama dari perkiraan."},
+        {t:"Perhatikan mood, bukan hanya menit", d:"Menarik diri, mudah marah, atau pola tidur berubah bisa lebih penting daripada total screen time."}
+      ],
+      '16-18':[
+        {t:"Beralih dari mengontrol ke mendampingi", d:"Beri arahan dan kepercayaan. Tetap hadir, bukan memeriksa semuanya."},
+        {t:"Bicarakan tekanan dan perbandingan", d:"Media sosial bisa memicu stres soal penampilan dan popularitas. Jadikan wajar untuk membicarakannya."},
+        {t:"Beri contoh kebiasaan sehat", d:"Simpan ponsel Anda saat makan malam. Remaja meniru apa yang orang dewasa lakukan lebih dari yang dikatakan."}
+      ]
+    }
+  }
+};
+
+var activeGroup = GROUPS[0];
+var tabsBuilt = false;
+function pick(g){ activeGroup = g; render(); }
+
+function render(){
+  document.getElementById('tabs').innerHTML = GROUPS.map(function(g){
+    return '<button class="tab'+(g===activeGroup?' active':'')+'" onclick="pick(\''+g+'\')">'+g+'</button>';
+  }).join('');
+  document.getElementById('groupTitle').textContent = NURVA.t('groupTitle', activeGroup);
+  document.getElementById('tipList').innerHTML = NURVA.t('groups')[activeGroup].map(function(tp, i){
+    return '<div class="tip"><div class="tip-num">'+(i+1)+'</div><div><h4>'+tp.t+'</h4><p>'+tp.d+'</p></div></div>';
+  }).join('');
+
+  var hist = NURVA.getJSON('nurva_mood_history', []);
+  var last = hist.length ? hist[hist.length-1] : null;
+  var card = document.getElementById('moodTipCard');
+  if(last && NURVA.t('moodTips')[last.key]){
+    card.style.display = 'block';
+    document.getElementById('moodTip').textContent = NURVA.moods[last.key].emoji + ' ' + NURVA.t('moodTips')[last.key];
+  } else card.style.display = 'none';
+}
+NURVA.start(DICT, render, 'tips');
+</script>
+</body>
+</html>
